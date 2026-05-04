@@ -77,7 +77,7 @@ Ak sa režim nezadá, predvolený je interaktívny režim:
 python two_sat_solver.py
 ```
 
-## Statický režim
+## Statický režim 
 
 ### Vstup
 
