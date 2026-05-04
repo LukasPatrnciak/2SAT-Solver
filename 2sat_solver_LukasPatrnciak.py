@@ -13,6 +13,7 @@ def literal_to_graph_index(x):
 
     if x > 0:
         return 2 * variable
+
     else:
         return 2 * variable + 1
 
@@ -20,6 +21,7 @@ def literal_to_graph_index(x):
 def negation_index(index):
     if index % 2 == 0:
         return index + 1
+
     else:
         return index - 1
 
@@ -29,6 +31,7 @@ def graph_index_to_literal(index):
 
     if index % 2 == 0:
         return variable
+
     else:
         return -variable
 
@@ -43,6 +46,7 @@ def add_edge(graph, reverse_graph, from_vertex, to_vertex):
     if to_vertex not in graph[from_vertex]:
         graph[from_vertex].append(to_vertex)
         reverse_graph[to_vertex].append(from_vertex)
+
         return True
 
     return False
@@ -114,21 +118,16 @@ def find_path(graph, start, end):
     return literals_path
 
 
-def find_incremental_conflict_cycle(graph, added_edges):
-    for edge in added_edges:
-        start = edge[0]
-        end = edge[1]
+def find_incremental_conflict_cycle(graph, variables_to_check):
+    for variable in variables_to_check:
+        positive = literal_to_graph_index(variable)
+        negative = literal_to_graph_index(-variable)
 
-        # hladanie cesty z konca hrany spat na zaciatok
-        path = find_path(graph, end, start)
+        path1 = find_path(graph, positive, negative)
+        path2 = find_path(graph, negative, positive)
 
-        if path:
-            cycle = [graph_index_to_literal(start)]
-
-            for vertex in path:
-                cycle.append(vertex)
-
-            return cycle
+        if path1 and path2:
+            return path1 + path2[1:]
 
     return []
 
@@ -231,12 +230,11 @@ def static_mode(line):
 
     clauses = []
 
-    for _ in range(clauses_count):
+    for i in range(clauses_count):
         literal_a, literal_b = map(int, input().split())
         clauses.append((literal_a, literal_b))
 
     graph, reverse_graph = build_graph(variables_count, clauses)
-
     result = solve_from_graph(graph, reverse_graph, variables_count)
 
     if result is None:
@@ -287,16 +285,14 @@ def interactive_mode(line):
             max_variable = new_max_variable
 
             added_edges = add_clause_to_graph(graph, reverse_graph, literal_a, literal_b)
-            cycle = find_incremental_conflict_cycle(graph, added_edges)
+            cycle = find_incremental_conflict_cycle(graph, [abs(literal_a), abs(literal_b)])
 
             if cycle:
                 remove_edges_from_graph(graph, reverse_graph, added_edges)
                 max_variable = old_max_variable
 
                 print("UNSAT: Clause (" + str(literal_a) + " v " + str(literal_b) + ") rejected.")
-
-                if cycle:
-                    print("Path detected:", " -> ".join(map(str, cycle)))
+                print("Path detected:", " -> ".join(map(str, cycle)))
 
             else:
                 print("SAT: Clause (" + str(literal_a) + " v " + str(literal_b) + ") accepted.")
@@ -320,10 +316,12 @@ def interactive_mode(line):
         line = input()
 
 
-if __name__ == "__main__":
-    first_line = input()
 
-    if first_line and first_line[0].isdigit():
-        static_mode(first_line)
-    else:
-        interactive_mode(first_line)
+# SPUSTENIE V MODOCH NA ZAKLADE VSTUPU
+first_line = input()
+
+if first_line and first_line[0].isdigit():
+    static_mode(first_line)
+
+else:
+    interactive_mode(first_line)
